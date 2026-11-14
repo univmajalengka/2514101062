@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator Diskon Belanja</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <style>
+        /* ============================================
+           CSS Variables & Reset
+           ============================================ */
+        :root {
+            --primary: #6C63FF;
+            --primary-dark: #5A52D5;
+            --primary-light: #8B83FF;
+            --accent: #FF6584;
+            --bg-gradient-start: #0f0c29;
+            --bg-gradient-mid: #302b63;
+            --bg-gradient-end: #24243e;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0d0;
+            --success: #00C9A7;
+            --warning: #FFB800;
+            --danger: #FF4757;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            --radius: 20px;
+            --radius-sm: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-mid), var(--bg-gradient-end));
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           Animated Background
+           ============================================ */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-animation .bubble {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.07;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-animation .bubble:nth-child(1) {
+            width: 400px; height: 400px;
+            background: var(--primary);
+            top: -100px; left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-animation .bubble:nth-child(2) {
+            width: 300px; height: 300px;
+            background: var(--accent);
+            top: 50%; right: -80px;
+            animation-delay: -5s;
+            animation-duration: 25s;
+        }
+
+        .bg-animation .bubble:nth-child(3) {
+            width: 250px; height: 250px;
+            background: var(--success);
+            bottom: -50px; left: 30%;
+            animation-delay: -10s;
+            animation-duration: 30s;
+        }
+
+        .bg-animation .bubble:nth-child(4) {
+            width: 200px; height: 200px;
+            background: var(--warning);
+            top: 20%; right: 20%;
+            animation-delay: -7s;
+            animation-duration: 22s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.95); }
+            75% { transform: translate(40px, 20px) scale(1.05); }
+        }
+
+        /* ============================================
+           Layout
+           ============================================ */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ============================================
+           Header
+           ============================================ */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header .icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 24px;
+            font-size: 36px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(108, 99, 255, 0.3);
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 10px 40px rgba(108, 99, 255, 0.3); }
+            50% { transform: scale(1.05); box-shadow: 0 15px 50px rgba(108, 99, 255, 0.5); }
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #b0b0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ============================================
+           Discount Rules Info
+           ============================================ */
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 36px;
+        }
+
+        .rule-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .rule-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .rule-card .rule-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .rule-card:nth-child(1) .rule-badge {
+            background: rgba(0, 201, 167, 0.15);
+            color: var(--success);
+        }
+
+        .rule-card:nth-child(2) .rule-badge {
+            background: rgba(255, 184, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .rule-card:nth-child(3) .rule-badge {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger);
+        }
+
+        .rule-card .rule-percent {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .rule-card:nth-child(1) .rule-percent { color: var(--success); }
+        .rule-card:nth-child(2) .rule-percent { color: var(--warning); }
+        .rule-card:nth-child(3) .rule-percent { color: var(--text-secondary); }
+
+        .rule-card .rule-condition {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* ============================================
+           Main Card
+           ============================================ */
+        .main-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius);
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: var(--shadow);
+        }
+
+        /* ============================================
+           Input Group
+           ============================================ */
+        .input-section {
+            margin-bottom: 32px;
+        }
+
+        .input-section label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 18px 20px 18px 60px;
+            border: 2px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            font-size: 1.3rem;
+            font-weight: 600;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-wrapper input::placeholder {
+            color: rgba(176, 176, 208, 0.4);
+            font-weight: 400;
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(108, 99, 255, 0.15);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ============================================
+           Quick Amount Buttons
+           ============================================ */
+        .quick-amounts {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            padding: 8px 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 30px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        /* ============================================
+           Calculate Button
+           ============================================ */
+        .btn-calculate {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-calculate::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(108, 99, 255, 0.4);
+        }
+
+        .btn-calculate:hover::before {
+            left: 100%;
+        }
+
+        .btn-calculate:active {
+            transform: translateY(0);
+        }
+
+        /* ============================================
+           Results Section
+           ============================================ */
+        .results {
+            margin-top: 32px;
+            display: none;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--card-border), transparent);
+            margin-bottom: 28px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .result-label .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .result-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        /* Total row */
+        .result-row.total {
+            margin-top: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.1), rgba(255, 101, 132, 0.05));
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(108, 99, 255, 0.2);
+        }
+
+        .result-row.total .result-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-row.total .result-value {
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Discount badge */
+        .discount-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .discount-badge.high {
+            background: rgba(0, 201, 167, 0.12);
+            color: var(--success);
+        }
+
+        .discount-badge.medium {
+            background: rgba(255, 184, 0, 0.12);
+            color: var(--warning);
+        }
+
+        .discount-badge.none {
+            background: rgba(255, 71, 87, 0.12);
+            color: var(--danger);
+        }
+
+        /* ============================================
+           History Section
+           ============================================ */
+        .history-section {
+            margin-top: 36px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .history-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-clear {
+            padding: 6px 14px;
+            border: 1px solid var(--card-border);
+            border-radius: 30px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-clear:hover {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--card-border);
+            border-radius: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .history-item .hi-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-item .hi-amount {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .history-item .hi-time {
+            font-size: 0.75rem;
+            color: rgba(176, 176, 208, 0.6);
+        }
+
+        .history-item .hi-right {
+            text-align: right;
+        }
+
+        .history-item .hi-discount {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .history-item .hi-total {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-history {
+            text-align: center;
+            padding: 30px;
+            color: rgba(176, 176, 208, 0.4);
+            font-size: 0.9rem;
+        }
+
+        /* ============================================
+           PHP Code Section
+           ============================================ */
+        .code-section {
+            margin-top: 36px;
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .code-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-toggle-code {
+            padding: 8px 18px;
+            border: 1px solid var(--card-border);
+            border-radius: 30px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .btn-toggle-code:hover {
+            border-color: var(--primary);
+            color: var(--primary-light);
+            background: rgba(108, 99, 255, 0.1);
+        }
+
+        .code-block {
+            display: none;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-sm);
+            padding: 24px;
+            overflow-x: auto;
+            position: relative;
+        }
+
+        .code-block.show {
+            display: block;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .code-block pre {
+            font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: #e0e0e0;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        .code-block .code-lang {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 0.7rem;
+            color: var(--primary-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Syntax highlighting */
+        .kw { color: #c792ea; }
+        .fn { color: #82aaff; }
+        .str { color: #c3e88d; }
+        .num { color: #f78c6c; }
+        .var { color: #eeffff; }
+        .cmt { color: #546e7a; font-style: italic; }
+        .op { color: #89ddff; }
+
+        /* ============================================
+           Footer
+           ============================================ */
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: rgba(176, 176, 208, 0.4);
+            font-size: 0.8rem;
+        }
+
+        .footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+
+        /* ============================================
+           Responsive
+           ============================================ */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 16px;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .rules-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .main-card {
+                padding: 24px;
+            }
+
+            .result-row.total .result-value {
+                font-size: 1.2rem;
+            }
+
+            .quick-amounts {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header .icon {
+                width: 64px;
+                height: 64px;
+                font-size: 28px;
+            }
+
+            .header h1 {
+                font-size: 1.3rem;
+            }
+
+            .input-wrapper input {
+                font-size: 1.1rem;
+                padding: 14px 16px 14px 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-animation">
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+        <div class="bubble"></div>
+    </div>
+
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="icon">🛒</div>
+            <h1>Kalkulator Diskon Belanja</h1>
+            <p>Hitung diskon otomatis berdasarkan total belanja Anda. Cepat, akurat, dan mudah digunakan.</p>
+        </div>
+
+        <!-- Discount Rules -->
+        <div class="rules-grid">
+            <div class="rule-card">
+                <span class="rule-badge">HEMAT BESAR</span>
+                <div class="rule-percent">10%</div>
+                <div class="rule-condition">Total belanja<br>≥ Rp 100.000</div>
+            </div>
+            <div class="rule-card">
+                <span class="rule-badge">LUMAYAN</span>
+                <div class="rule-percent">5%</div>
+                <div class="rule-condition">Total belanja<br>Rp 50.000 – Rp 99.999</div>
+            </div>
+            <div class="rule-card">
+                <span class="rule-badge">BELUM DAPAT</span>
+                <div class="rule-percent">0%</div>
+                <div class="rule-condition">Total belanja<br>&lt; Rp 50.000</div>
+            </div>
+        </div>
+
+        <!-- Main Card -->
+        <div class="main-card">
+
+            <!-- Input -->
+            <div class="input-section">
+                <label>Masukkan Total Belanja</label>
+                <div class="input-wrapper">
+                    <span class="input-prefix">Rp</span>
+                    <input type="text" id="totalBelanja" placeholder="Contoh: 150000" autocomplete="off" inputmode="numeric">
+                </div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setAmount(30000)">Rp 30.000</button>
+                    <button class="quick-btn" onclick="setAmount(50000)">Rp 50.000</button>
+                    <button class="quick-btn" onclick="setAmount(75000)">Rp 75.000</button>
+                    <button class="quick-btn" onclick="setAmount(100000)">Rp 100.000</button>
+                    <button class="quick-btn" onclick="setAmount(120000)">Rp 120.000</button>
+                    <button class="quick-btn" onclick="setAmount(250000)">Rp 250.000</button>
+                </div>
+            </div>
+
+            <!-- Calculate Button -->
+            <button class="btn-calculate" onclick="hitungDiskon()">
+                ✨ Hitung Diskon
+            </button>
+
+            <!-- Results -->
+            <div class="results" id="results">
+                <div class="results-divider"></div>
+
+                <div class="result-row">
+                    <div class="result-label">
+                        <span class="dot" style="background: var(--primary-light);"></span>
+                        Total Belanja
+                    </div>
+                    <div class="result-value" id="resBelanja" style="color: var(--text-primary);">-</div>
+                </div>
+
+                <div class="result-row">
+                    <div class="result-label">
+                        <span class="dot" style="background: var(--success);"></span>
+                        Diskon
+                        <span class="discount-badge" id="discountBadge">-</span>
+                    </div>
+                    <div class="result-value" id="resDiskon" style="color: var(--success);">-</div>
+                </div>
+
+                <div class="result-row total">
+                    <div class="result-label">
+                        💰 Total yang Harus Dibayar
+                    </div>
+                    <div class="result-value" id="resTotalBayar">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History -->
+        <div class="main-card history-section" id="historySection" style="display: none;">
+            <div class="history-header">
+                <h3>📋 Riwayat Perhitungan</h3>
+                <button class="btn-clear" onclick="clearHistory()">Hapus Semua</button>
+            </div>
+            <div class="history-list" id="historyList"></div>
+        </div>
+
+        <!-- PHP Code Reference -->
+        <div class="main-card code-section">
+            <div class="code-header">
+                <h3>💻 Kode PHP</h3>
+                <button class="btn-toggle-code" id="btnToggleCode" onclick="toggleCode()">Lihat Kode</button>
+            </div>
+            <div class="code-block" id="codeBlock">
+                <span class="code-lang">PHP</span>
+                <pre><span class="op">&lt;?php</span>
+
+<span class="cmt">// Fungsi untuk menghitung diskon berdasarkan total belanja</span>
+<span class="kw">function</span> <span class="fn">hitungDiskon</span>(<span class="var">$totalBelanja</span>) {
+    <span class="var">$diskon</span> <span class="op">=</span> <span class="num">0</span>;
+
+    <span class="kw">if</span> (<span class="var">$totalBelanja</span> <span class="op">&gt;=</span> <span class="num">100000</span>) {
+        <span class="var">$diskon</span> <span class="op">=</span> <span class="num">0.1</span> <span class="op">*</span> <span class="var">$totalBelanja</span>;
+        <span class="cmt">// Diskon 10% untuk total belanja ≥ Rp. 100.000</span>
+    } <span class="kw">elseif</span> (<span class="var">$totalBelanja</span> <span class="op">&gt;=</span> <span class="num">50000</span>) {
+        <span class="var">$diskon</span> <span class="op">=</span> <span class="num">0.05</span> <span class="op">*</span> <span class="var">$totalBelanja</span>;
+        <span class="cmt">// Diskon 5% untuk total belanja ≥ Rp. 50.000</span>
+    }
+
+    <span class="kw">return</span> <span class="var">$diskon</span>;
+}
+
+<span class="cmt">// Contoh penggunaan</span>
+<span class="var">$totalBelanja</span> <span class="op">=</span> <span class="num">120000</span>;
+<span class="var">$diskon</span> <span class="op">=</span> <span class="fn">hitungDiskon</span>(<span class="var">$totalBelanja</span>);
+
+<span class="kw">echo</span> <span class="str">"Total belanja: Rp. "</span> <span class="op">.</span> <span class="var">$totalBelanja</span> <span class="op">.</span> <span class="str">"&lt;br&gt;"</span>;
+<span class="kw">echo</span> <span class="str">"Diskon: Rp. "</span> <span class="op">.</span> <span class="var">$diskon</span> <span class="op">.</span> <span class="str">"&lt;br&gt;"</span>;
+<span class="kw">echo</span> <span class="str">"Total yang harus dibayar: Rp. "</span> <span class="op">.</span> (<span class="var">$totalBelanja</span> <span class="op">-</span> <span class="var">$diskon</span>);
+
+<span class="op">?&gt;</span></pre>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Kalkulator Diskon Belanja &mdash; Pertemuan 06-08 Tugas PHP (Versi Tema Modern)</p>
+            <p style="margin-top: 10px;">
+                <a href="../kalkulator-diskon/index.html" style="display: inline-block; padding: 6px 14px; border: 1px solid var(--card-border); border-radius: 20px; color: var(--text-secondary); font-size: 0.8rem; text-decoration: none;">&larr; Buka Website Versi Standar / Original</a>
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // Format currency
+        // ============================================
+        function formatRupiah(angka) {
+            return 'Rp ' + angka.toLocaleString('id-ID');
+        }
+
+        // ============================================
+        // Format input as you type
+        // ============================================
+        const inputEl = document.getElementById('totalBelanja');
+
+        inputEl.addEventListener('input', function () {
+            let raw = this.value.replace(/\D/g, '');
+            if (raw) {
+                this.value = parseInt(raw).toLocaleString('id-ID');
+            }
+        });
+
+        inputEl.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                hitungDiskon();
+            }
+        });
+
+        // ============================================
+        // Set amount from quick buttons
+        // ============================================
+        function setAmount(amount) {
+            inputEl.value = amount.toLocaleString('id-ID');
+            inputEl.focus();
+        }
+
+        // ============================================
+        // Core discount calculation (mirrors PHP)
+        // ============================================
+        function hitungDiskon() {
+            const raw = inputEl.value.replace(/\D/g, '');
+            const totalBelanja = parseInt(raw) || 0;
+
+            if (totalBelanja <= 0) {
+                inputEl.style.borderColor = 'var(--danger)';
+                inputEl.style.boxShadow = '0 0 0 4px rgba(255, 71, 87, 0.15)';
+                setTimeout(() => {
+                    inputEl.style.borderColor = 'var(--card-border)';
+                    inputEl.style.boxShadow = 'none';
+                }, 1500);
+                return;
+            }
+
+            let diskon = 0;
+            let persen = 0;
+
+            if (totalBelanja >= 100000) {
+                diskon = 0.1 * totalBelanja;
+                persen = 10;
+            } else if (totalBelanja >= 50000) {
+                diskon = 0.05 * totalBelanja;
+                persen = 5;
+            }
+
+            const totalBayar = totalBelanja - diskon;
+
+            // Display results
+            const resultsEl = document.getElementById('results');
+            resultsEl.classList.remove('show');
+            // Force reflow for re-animation
+            void resultsEl.offsetWidth;
+            resultsEl.classList.add('show');
+
+            document.getElementById('resBelanja').textContent = formatRupiah(totalBelanja);
+
+            const resDiskonEl = document.getElementById('resDiskon');
+            resDiskonEl.textContent = '- ' + formatRupiah(diskon);
+
+            const badge = document.getElementById('discountBadge');
+            if (persen === 10) {
+                badge.className = 'discount-badge high';
+                badge.textContent = '🎉 10% OFF';
+                resDiskonEl.style.color = 'var(--success)';
+            } else if (persen === 5) {
+                badge.className = 'discount-badge medium';
+                badge.textContent = '👍 5% OFF';
+                resDiskonEl.style.color = 'var(--warning)';
+            } else {
+                badge.className = 'discount-badge none';
+                badge.textContent = '😔 Tidak ada diskon';
+                resDiskonEl.style.color = 'var(--danger)';
+            }
+
+            document.getElementById('resTotalBayar').textContent = formatRupiah(totalBayar);
+
+            // Add to history
+            addToHistory(totalBelanja, diskon, persen, totalBayar);
+        }
+
+        // ============================================
+        // History management
+        // ============================================
+        let history = [];
+
+        function addToHistory(belanja, diskon, persen, bayar) {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            history.unshift({ belanja, diskon, persen, bayar, time: timeStr });
+
+            if (history.length > 10) history.pop();
+
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const section = document.getElementById('historySection');
+            const list = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            list.innerHTML = '';
+
+            history.forEach((item, i) => {
+                const colorClass = item.persen === 10 ? 'var(--success)' :
+                                   item.persen === 5 ? 'var(--warning)' : 'var(--danger)';
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div class="hi-left">
+                        <div class="hi-amount">${formatRupiah(item.belanja)}</div>
+                        <div class="hi-time">${item.time}</div>
+                    </div>
+                    <div class="hi-right">
+                        <div class="hi-discount" style="color: ${colorClass};">
+                            ${item.persen > 0 ? '-' + formatRupiah(item.diskon) + ' (' + item.persen + '%)' : 'Tanpa diskon'}
+                        </div>
+                        <div class="hi-total">Bayar: ${formatRupiah(item.bayar)}</div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+
+        // ============================================
+        // Toggle PHP code view
+        // ============================================
+        function toggleCode() {
+            const block = document.getElementById('codeBlock');
+            const btn = document.getElementById('btnToggleCode');
+
+            block.classList.toggle('show');
+            btn.textContent = block.classList.contains('show') ? 'Sembunyikan' : 'Lihat Kode';
+        }
+    </script>
+
+</body>
+</html>
