@@ -1,4 +1,4 @@
-PAWB/tugas pertemuan 3/# 🌿 Dashboard Wisata Terasering Panyaweuyan
+# 🌿 Dashboard Wisata Terasering Panyaweuyan
 
 Dashboard promosi dan informasi wisata interaktif untuk **Terasering Panyaweuyan**, Argapura, Majalengka, Jawa Barat.
 
